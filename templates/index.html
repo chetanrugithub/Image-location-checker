@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Location Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+            text-align: center;
+            padding: 40px;
+            margin: 0;
+        }
+        h2 {
+            color: #111;
+            margin-bottom: 20px;
+        }
+        .upload-box {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+            display: inline-block;
+        }
+        input[type="file"] {
+            margin: 15px 0;
+        }
+        button {
+            background: black;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: red;
+        }
+        .preview {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .preview img {
+            width: 180px;
+            height: auto;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0px 3px 6px rgba(0,0,0,0.1);
+        }
+        .result-box {
+            margin-top: 50px;
+            padding: 30px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            display: none;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+        }
+        .yes {
+            background: #ffe6e6;
+            border-left: 6px solid green;
+            color: black;
+        }
+        .no {
+            background: #ffe6e6;
+            border-left: 6px solid red;
+            color: black;
+        }
+        .reason {
+            margin-top: 10px;
+            font-size: 15px;
+            font-weight: normal;
+            color: #333;
+        }
+        .loading {
+            font-size: 16px;
+            color: #666;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h2>📍 Image Location Checker</h2>
+    <div class="upload-box">
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="imageInput" name="images" multiple accept="image/*">
+            <br>
+            <button type="submit">🔍 Analyze</button>
+        </form>
+        <div class="preview" id="preview"></div>
+    </div>
+
+    <p id="loading" class="loading" style="display:none;">Analyzing images... Please wait ⏳</p>
+    <div id="result" class="result-box"></div>
+
+    <script>
+        // Preview uploaded images
+        document.getElementById("imageInput").addEventListener("change", (e) => {
+            let previewDiv = document.getElementById("preview");
+            previewDiv.innerHTML = "";
+            for (let file of e.target.files) {
+                let reader = new FileReader();
+                reader.onload = (event) => {
+                    let img = document.createElement("img");
+                    img.src = event.target.result;
+                    previewDiv.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form submit & analysis
+        document.getElementById("uploadForm").onsubmit = async (e) => {
+            e.preventDefault();
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("result").style.display = "none";
+
+            let formData = new FormData(e.target);
+            let res = await fetch("/analyze", { method: "POST", body: formData });
+            let data = await res.json();
+
+            document.getElementById("loading").style.display = "none";
+            let resultBox = document.getElementById("result");
+
+            let analysis = data.analysis;
+            let decision = analysis.toLowerCase().includes("yes") ? "yes" : "no";
+            let message = decision === "yes" 
+                ? "✅ Yes, the images appear to be from the same location." 
+                : "❌ No, the images seem to be from different locations.";
+
+            resultBox.className = "result-box " + decision;
+            resultBox.innerHTML = `
+                <div>${message}</div>
+                <div class="reason">📌 Reason: ${analysis}</div>
+            `;
+            resultBox.style.display = "block";
+        };
+    </script>
+</body>
+</html>
