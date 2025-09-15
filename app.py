@@ -16,7 +16,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 def index():
     return render_template('index.html')
 
-@app.route('/analyze', methods=['POST'])
+@app.route('/analyze', methods=['POST'])  
 def analyze():
     uploaded_files = request.files.getlist("images")
 
@@ -31,7 +31,7 @@ def analyze():
     model = genai.GenerativeModel("gemini-1.5-flash")
 
     # Prepare input for Gemini
-    prompt = "Compare these images and tell me if they are from the same location or not. Give Yes/No and explain why."
+    prompt = "Compare these images and tell me if they are from the same location or not or Real or Fake. Give Yes/No and explain why."
     parts = [prompt]
 
     # Add image binary data
@@ -39,7 +39,7 @@ def analyze():
         with open(img, "rb") as f:
             parts.append({"mime_type": "image/jpeg", "data": f.read()})
 
-    # Get response
+    # Get responseS
     response = model.generate_content(parts)
 
     return jsonify({"analysis": response.text})
